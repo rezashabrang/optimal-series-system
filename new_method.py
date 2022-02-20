@@ -8,7 +8,7 @@ from functions_new import (
 T = 210  # Time units of mission
 J = 2  # N operation systems
 H = 2  # N rescue systems
-m = 20  # N intervals
+m = 3  # N intervals
 pi = 50  # FDSM paramter
 CF = 10000  # Failure Cost
 CL = 300000  # System Loss Cost

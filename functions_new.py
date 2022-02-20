@@ -122,45 +122,7 @@ def p_hat(i_s, i_o, j, k):
             d_j = SPECS[j][sub_component]['d']
             temp_F_Weibull.append(F_Weibull(delta * (d_j * i_s + i_o), j, sub_component))
         return min(temp_F_Weibull)
-        #
-        # # ------------------- Creating p_hat of all subcomponents matrix -------------------
-        # # Initializing p_hat matrix
-        # p_mat = []
-        # # For every component in the group of the component
-        # for sub_component in k:
-        #     # Temporary matrix for every sub component
-        #     temp_p_mat = []
-        #     # For every operation time less than or equal of current operation time.
-        #     for operation_time in range(i_o + 1):
-        #         d_j = SPECS[j][sub_component]['d']
-        #         temp_p_mat.append(F_Weibull(delta * (d_j * i_s + operation_time), j, sub_component))
-        #     p_mat.append(temp_p_mat)
-        #
-        # # ------------------- Calculating final p_hat value for group -------------------~
-        # final_p_hat = 0
-        # all_working_prob = 0  # Probability when all devices are working in the time interval.
-        # for c_index, component in enumerate(p_mat):
-        #     # List used for product
-        #     temp = [[component[-1]]]
-        #
-        #     # Creating matrix for product calculation
-        #     for i in range(len(p_mat)):
-        #         if i == c_index:
-        #             continue
-        #         temp.append(p_mat[i])
-        #
-        #     combinations = list(product(*temp))  # Computing combinations
-        #     # Calculating probabilities
-        #     all_working_prob = reduce(lambda x, y: x * y, combinations[-1])
-        #     combinations.pop()
-        #     for comb in list(combinations):
-        #         print(prod(comb))
-        #         final_p_hat += prod(comb)
-        #         # print(final_p_hat)
-        #
-        # final_p_hat += all_working_prob  # Adding the final prob
-        #
-        # return final_p_hat
+
     else:
         # Defining Constant
         d_j = SPECS[j][k]['d']
@@ -297,7 +259,7 @@ def PR_e_j_k(j, k_j):
     k = PROPOSED_SYSTEM[j][k_j - 1]
     res = 0
     for x in range(m):
-        res += Q(j, k_j - 1, x, k) * (1 - p_hat(x, m - x, j, k))
+        res += Q(j, k_j - 1, x, k) * (1 - p_hat(x, m - x, j, k)) * 0.99
 
     return res
 

@@ -132,3 +132,5 @@ sandbox/
 /__pycache__/
 /.idea/
 test.py
+Optimal_structure_of_series_system_with_1_out_of_n_warm_standby.pdf
+dump.py
