@@ -1,4 +1,5 @@
 import math
+from math import pow, exp
 import sys
 
 from SYSTEM import SPECS, PROPOSED_SYSTEM
@@ -6,6 +7,8 @@ from tqdm import tqdm
 from functools import reduce
 from itertools import product
 from math import prod
+
+from scipy.integrate import quad
 
 # -------------- Constants (globals) --------------
 
@@ -93,7 +96,22 @@ def Z(i):
 
 def F_Weibull(t, j, k):
     """
-    Weibull time-to failure distributions
+    Weibull time-to failure cumulativce
+    args:
+        t: Entire time from the entire mission beginning
+        j: Subsystem type
+        k: Component type
+    """
+    # Defining Constants
+    n_j = SPECS[j][k]['n']
+    b_j = SPECS[j][k]['b']
+    res = 1 - math.exp((-1) * math.pow(t / n_j, b_j))
+    return res
+
+
+def f_weibull(t, j, k):
+    """
+    Weibull time-to failure density
     args:
         t: Entire time from the entire mission begining
         j: Subsystem type
@@ -102,7 +120,26 @@ def F_Weibull(t, j, k):
     # Defining Constants
     n_j = SPECS[j][k]['n']
     b_j = SPECS[j][k]['b']
-    res = 1 - math.exp((-1) * math.pow(t / n_j, b_j))
+    res = (b_j / n_j) * pow((t / n_j), b_j - 1) * exp(-pow((t / n_j), b_j))
+    return res
+
+
+def f_max(t, j, k, group_size):
+    """Order statistics density
+    args:
+        t: time,
+        j: system type,
+        k: type of component
+        group_size: count of components grouped together
+    """
+    res = group_size * f_weibull(t, j, k) * pow(F_Weibull(t, j, k), group_size - 1)
+    return res
+
+
+def F_MAX(t, j, k, group_size):
+    """Order statistics cumulative
+    """
+    res = quad(f_max, 0, t, args=(j, k, group_size))
     return res
 
 
@@ -117,11 +154,13 @@ def p_hat(i_s, i_o, j, k):
         k: Type of component
     """
     if type(k) == list:
-        temp_F_Weibull = []
-        for sub_component in k:
-            d_j = SPECS[j][sub_component]['d']
-            temp_F_Weibull.append(F_Weibull(delta * (d_j * i_s + i_o), j, sub_component))
-        return min(temp_F_Weibull)
+        d_j = SPECS[j][k[0]]['d']
+        type_k = k[0]  # Since it is homogenous
+        group_size = len(k)  # How many components are grouped
+        t = delta * (d_j * i_s + i_o)
+        integram_vals = F_MAX(t, j, type_k, group_size)
+        p_hat_val = integram_vals[0] - integram_vals[1]
+        return p_hat_val
 
     else:
         # Defining Constant
@@ -149,7 +188,8 @@ def p(i_s, i_o, j, k):
             temp_p_mat = []
             # For every operation time less than or equal of current operation time.
             for operation_time in range(i_o + 1):
-                temp_p_mat.append(p_hat(i_s, operation_time + 1, j, sub_component) - p_hat(i_s, operation_time, j, sub_component))
+                temp_p_mat.append(
+                    p_hat(i_s, operation_time + 1, j, sub_component) - p_hat(i_s, operation_time, j, sub_component))
             p_mat.append(temp_p_mat)
 
         # ------------------- Calculating final p_hat value for group -------------------~
